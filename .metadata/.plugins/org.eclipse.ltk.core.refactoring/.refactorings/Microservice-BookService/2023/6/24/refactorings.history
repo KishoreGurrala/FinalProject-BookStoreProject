@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Copy element &apos;BookNotFoundException.java&apos; to &apos;Microservice-CartService/src/main/java/com.cart.exceptions&apos;&#x0D;&#x0A;- Original project: &apos;Microservice-BookService&apos;&#x0D;&#x0A;- Destination element: &apos;Microservice-CartService/src/main/java/com.cart.exceptions&apos;&#x0D;&#x0A;- Original element: &apos;com.book.exceptions.BookNotFoundException.java&apos;" description="Copy compilation unit" destination="=Microservice-CartService/src\/main\/java=/optional=/true=/=/maven.pomderived=/true=/&lt;com.cart.exceptions" element1="/src\/main\/java=/optional=/true=/=/maven.pomderived=/true=/&lt;com.book.exceptions{BookNotFoundException.java" files="0" flags="589830" folders="0" id="org.eclipse.jdt.ui.copy" policy="org.eclipse.jdt.ui.copyResources" stamp="1686914727502" units="1" version="1.0"/>
+</session>

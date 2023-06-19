@@ -1,0 +1,117 @@
+package com.customer.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.customer.client.BookFeignClient;
+import com.customer.client.OrderClient;
+import com.customer.dto.Book;
+import com.customer.entity.Customer;
+import com.customer.entity.Login;
+import com.customer.exception.CustomerNotFoundException;
+import com.customer.exception.payload.ApiResponse;
+import com.customer.service.CustomerService;
+
+@RestController
+@RequestMapping("/customer")
+public class CustomerController {
+
+	@Autowired
+	private CustomerService customerService;
+
+	@Autowired
+	private AuthenticationManager authenticationManager;
+
+	@Autowired
+	private OrderClient orderClient;
+
+	@Autowired
+	private BookFeignClient bookFeignClient;
+
+	// To register the new customer.
+	@PostMapping("/register")
+	public ResponseEntity<?> registerCustomer(@RequestBody Customer customer) {
+		Customer customer1 = customerService.addCustomer(customer);
+		ApiResponse resp = ApiResponse.builder().message("You are successfully registered").status("Success").result(customer1).build();
+		return new ResponseEntity<>(resp, HttpStatus.CREATED);
+	}
+
+	// To login and create the token
+	@PostMapping("/login")
+	public String getEmployee(@RequestBody Login login) {
+		try {
+
+			this.authenticationManager
+					.authenticate(new UsernamePasswordAuthenticationToken(login.getEmail(), login.getPassword()));
+			return customerService.generateToken(login.getEmail());
+		} catch (UsernameNotFoundException e) {
+			throw new CustomerNotFoundException("Wrong gmail or Password");
+		} catch (BadCredentialsException e) {
+			throw new CustomerNotFoundException("You entered Wrong gmail or Password");
+		} catch (InternalAuthenticationServiceException e) {
+			e.printStackTrace();
+			throw new CustomerNotFoundException("You entered Wrong gmail or Password");
+		}
+
+	}
+
+	// To validate the token
+	@GetMapping("/validate")
+	public String validateToken(@RequestParam("token") String token) {
+		customerService.validatetoken(token);
+		return "Token is valid";
+	}
+
+	// To get the data of all customers
+	@GetMapping("/getCustomers")
+	public ResponseEntity<?> getCustomers() {
+
+		List<Customer> list = customerService.getCustomers();
+		ApiResponse resp = ApiResponse.builder().message("All customers data.").status("Success").result(list).build();
+		return new ResponseEntity<>(resp, HttpStatus.OK);
+
+	}
+
+	// To get the customer data using customerId
+	@GetMapping("/getCustomer")
+	public ResponseEntity<?> getCustomer(@RequestHeader("userEmail")  String Email) {
+
+		Customer customer = customerService.getCustomer((Email));
+		ApiResponse resp = ApiResponse.builder().message("This is your profile").status("Success").result(customer).build();
+		return new ResponseEntity<>(resp, HttpStatus.OK);
+
+	}
+
+	// To retrieve all the books
+	@GetMapping("/books")
+	public ResponseEntity<?> getBooks() {
+
+		List<Book> books = bookFeignClient.getBooks();
+		ApiResponse resp = ApiResponse.builder().message("These are the Books available").status("Success").result(books).build();
+		return new ResponseEntity<>(resp, HttpStatus.OK);
+	}
+
+	// To make the order
+	@GetMapping("/order")
+	public ResponseEntity<?> makeOrder(@RequestHeader("userEmail")  String email) {
+
+		orderClient.makeOrder(email);
+		ApiResponse resp = ApiResponse.builder().message("Order completed").status("Success").result(null).build();
+		return new ResponseEntity<>(resp, HttpStatus.OK);
+	}
+}
